@@ -24,6 +24,9 @@ android.api = 33
 android.minapi = 26
 android.archs = arm64-v8a, armeabi-v7a
 
+# CI/automation: accept Android SDK licenses non-interactively (GitHub Actions).
+android.accept_sdk_license = True
+
 # Soft keyboard: resize mode so ScrollViews move up correctly
 android.manifest.activity_attributes = android:windowSoftInputMode=adjustResize
 
@@ -33,3 +36,4 @@ android.manifest.activity_attributes = android:windowSoftInputMode=adjustResize
 [buildozer]
 log_level = 2
 warn_on_root = 1
+
