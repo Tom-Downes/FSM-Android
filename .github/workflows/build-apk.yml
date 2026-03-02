@@ -14,11 +14,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      # python-for-android/Gradle builds require Java 17+ (AGP requirement).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential ccache git zip unzip openjdk-17-jdk \
+            build-essential ccache git zip unzip \
             autoconf libtool pkg-config \
             zlib1g-dev libffi-dev libssl-dev libsqlite3-dev \
             libjpeg-dev libfreetype6-dev \
