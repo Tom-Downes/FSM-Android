@@ -1,18 +1,18 @@
 # FSM Android — Deployment Plan 2
-**Base: FSM-6.py (Desktop, 4831 lines, fully scanned)**
+**Base: FSM-Desktop.py (4831 lines)**
 **Target: Kivy / KivyMD 1.2.0 / Buildozer — Android**
-**Status: Definitive high-grade feature-complete plan**
+
 
 ---
 
 ## About This Document
 
-This plan was produced after reading every line of FSM-6.py. It supersedes
-Deployment Plan 1. Every feature is covered — including those absent from
+This plan was produced after completing FSM-Apo. It supersedes
+Deployment Plan 1. Every feature is covered: including those absent from
 Plan 1 (Healing Spells tab, HOPE checkbox, sanity preview, dropdown madness/
 wound selection, animation systems, custom popups, session log coloring, etc.).
 
-**Rule**: FSM-6.py is the single source of truth for all game logic and numbers.
+**Rule**: FSM-Desktop.py is the single source for all game logic and numbers.
 The Android code must produce identical outcomes with a touch-native interface.
 
 ---
@@ -1590,3 +1590,4 @@ Follow this sequence to maintain a runnable app at every step:
 
 *End of Deployment Plan 2 — covers every feature in FSM-6.py.*
 *Source of truth: `C:\Users\Tom\Desktop\FSM\FSM-Desktop\FSM-6.py` (4831 lines)*
+
