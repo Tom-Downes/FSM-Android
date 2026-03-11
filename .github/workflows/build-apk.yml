@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK (Psyke)
 
 on:
   workflow_dispatch:
@@ -6,10 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
-    defaults:
-      run:
-        working-directory: FSM-Android-V3
 
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +47,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: FSM-Android-V3/buildozer.log
+          path: buildozer.log
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: FSM-Android-V3/bin/*.apk
+          path: bin/*.apk
+
