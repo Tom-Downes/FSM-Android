@@ -76,6 +76,16 @@ rm -f "${OUT_FILE}"
 
 AAB_PATH="$(find "${SCRIPT_DIR}/bin" -maxdepth 1 -type f -name '*.aab' | head -n 1)"
 test -n "${AAB_PATH}"
+
+# Buildozer can produce an unsigned bundle; sign it explicitly for Play upload.
+jarsigner \
+  -keystore "${KEYSTORE_PATH}" \
+  -storepass "${ANDROID_KEYSTORE_PASSWORD}" \
+  -keypass "${ANDROID_KEY_PASSWORD}" \
+  "${AAB_PATH}" \
+  "${ANDROID_KEY_ALIAS}"
+
+jarsigner -verify -verbose -certs "${AAB_PATH}"
 cp "${AAB_PATH}" "${OUT_FILE}"
 
 rm -f "${KEYSTORE_PATH}"

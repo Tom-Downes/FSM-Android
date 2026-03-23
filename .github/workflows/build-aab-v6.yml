@@ -79,6 +79,10 @@ jobs:
           name: aab-v6-${{ github.run_number }}
           path: ABB/ABB-V1.aab
 
+      - name: Verify committed AAB path exists
+        if: success()
+        run: ls -lh ABB/ABB-V1.aab
+
       - name: Commit ABB-V1 back to main
         if: success()
         run: |
