@@ -54,7 +54,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install "Cython<3" pexpect "buildozer==1.5.0"
 
-      - name: Build AAB and stage ABB-V2
+      - name: Build AAB and stage ABB-V3
         env:
           INPUT_VERSION: ${{ github.event.inputs.version }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
@@ -77,22 +77,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aab-v7-${{ github.run_number }}
-          path: ABB/ABB-V2.aab
+          path: ABB/ABB-V3.aab
 
       - name: Verify committed AAB path exists
         if: success()
-        run: ls -lh ABB/ABB-V2.aab
+        run: ls -lh ABB/ABB-V3.aab
 
-      - name: Commit ABB-V2 back to main
+      - name: Commit ABB-V3 back to main
         if: success()
         run: |
           git checkout -- Psyke-Android-V7/buildozer.spec Psyke-Android-V7/build_info.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ABB/ABB-V2.aab
+          git add ABB/ABB-V3.aab
           if git diff --cached --quiet; then
             echo "No ABB changes to commit."
             exit 0
           fi
-          git commit -m "build: update ABB-V2"
+          git commit -m "build: update ABB-V3"
           git push origin HEAD:main
