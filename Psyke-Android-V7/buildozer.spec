@@ -27,7 +27,7 @@ orientation = portrait
 fullscreen = 0
 
 # Android target
-android.api = 33
+android.api = 35
 android.minapi = 26
 android.archs = arm64-v8a, armeabi-v7a
 
