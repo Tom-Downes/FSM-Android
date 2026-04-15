@@ -125,20 +125,35 @@ jobs:
           print(f"Stamped version={version} numeric={numeric} sha={sha} run={run_no}")
           PY
 
-      - name: Build APK
+      - name: Build release package
         run: |
           set -o pipefail
           buildozer -v android release 2>&1 | tee buildozer-apk.log
 
-      - name: Rename APK for release upload
+      - name: Convert signed bundle to universal APK
         shell: bash
         env:
           INPUT_VERSION: ${{ github.event.inputs.version || '14.0.0' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          APK_PATH="$(find bin -maxdepth 1 -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
+          AAB_PATH="$(find . -maxdepth 2 -type f -name '*.aab' | head -n 1)"
+          test -n "$AAB_PATH"
+          BUNDLETOOL_VERSION="1.17.2"
+          curl -fsSL -o bundletool.jar \
+            "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+          RELEASE_APKS="Psyke-Android-14-${INPUT_VERSION}.apks"
           RELEASE_APK="Psyke-Android-14-${INPUT_VERSION}.apk"
-          cp "$APK_PATH" "$RELEASE_APK"
+          java -jar bundletool.jar build-apks \
+            --bundle "$AAB_PATH" \
+            --output "$RELEASE_APKS" \
+            --mode=universal \
+            --ks psyke-upload.keystore \
+            --ks-pass=pass:"$ANDROID_KEYSTORE_PASSWORD" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --key-pass=pass:"$ANDROID_KEY_PASSWORD"
+          unzip -p "$RELEASE_APKS" universal.apk > "$RELEASE_APK"
           echo "RELEASE_APK=$RELEASE_APK" >> "$GITHUB_ENV"
 
       - name: Ensure GitHub release exists
