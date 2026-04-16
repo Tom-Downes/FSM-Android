@@ -1,48 +1,68 @@
 """
 p4a build hook — patches Lottie presplash template to disable looping.
 
-p4a's default lottie.xml uses lottie_loop="true" which loops the entire
-animation. We want lottie_loop="false" so the intro plays once and the
-spinner (which runs to frame 36000) plays until the app loads.
+Targets specific known paths instead of recursive glob to avoid
+scanning the entire Android SDK/NDK cache.
 """
-import glob
 import os
 
 
-def _patch_lottie():
-    search_roots = [
-        os.path.expanduser("~/.buildozer"),
-        "/usr/local/lib",
-        "/usr/lib",
-        "/opt",
+def _patch_lottie(buildozer):
+    # p4a installs to <app_dir>/.buildozer/android/platform/python-for-android/
+    # We get the app dir from the hook context or fall back to cwd.
+    try:
+        app_dir = buildozer.root_dir
+    except Exception:
+        app_dir = os.getcwd()
+
+    targets = [
+        # Template file (used to generate the layout)
+        os.path.join(
+            app_dir,
+            ".buildozer", "android", "platform", "python-for-android",
+            "pythonforandroid", "bootstraps", "common", "build",
+            "templates", "lottie.xml"
+        ),
+        # Rendered layout file (after bootstrap setup, before gradle)
+        os.path.join(
+            app_dir,
+            ".buildozer", "android", "platform",
+            "build-arm64-v8a_armeabi-v7a", "build",
+            "bootstrap_builds", "sdl2", "src", "main", "res",
+            "layout", "lottie.xml"
+        ),
     ]
+
     patched = 0
-    for root in search_roots:
-        for path in glob.glob(os.path.join(root, "**", "lottie.xml"), recursive=True):
-            if "bootstrap" not in path and "template" not in path:
-                continue
-            try:
-                with open(path) as f:
-                    content = f.read()
-                if 'lottie_loop="true"' in content:
-                    content = content.replace('lottie_loop="true"', 'lottie_loop="false"')
-                    with open(path, "w") as f:
-                        f.write(content)
-                    print(f"[p4a_hook] Patched lottie_loop -> false: {path}")
-                    patched += 1
-            except Exception as e:
-                print(f"[p4a_hook] Could not patch {path}: {e}")
+    for path in targets:
+        if not os.path.exists(path):
+            print(f"[p4a_hook] Not found (skipping): {path}")
+            continue
+        try:
+            with open(path) as f:
+                content = f.read()
+            if 'lottie_loop="true"' in content:
+                content = content.replace('lottie_loop="true"', 'lottie_loop="false"')
+                with open(path, "w") as f:
+                    f.write(content)
+                print(f"[p4a_hook] Patched lottie_loop -> false: {path}")
+                patched += 1
+            else:
+                print(f"[p4a_hook] Already patched or not found in: {path}")
+        except Exception as e:
+            print(f"[p4a_hook] Error patching {path}: {e}")
+
     if patched == 0:
-        print("[p4a_hook] WARNING: no lottie.xml bootstrap template found to patch")
+        print("[p4a_hook] WARNING: lottie_loop not patched in any target file")
 
 
 def pre_build(buildozer):
-    _patch_lottie()
+    _patch_lottie(buildozer)
 
 
 def before_apk_build(buildozer):
-    _patch_lottie()
+    _patch_lottie(buildozer)
 
 
 def before_aab_build(buildozer):
-    _patch_lottie()
+    _patch_lottie(buildozer)
