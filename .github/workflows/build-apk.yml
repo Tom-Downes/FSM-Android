@@ -1,4 +1,4 @@
-name: Build APK (Psyke V14)
+name: Build APK (Psyke V16)
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
       - main
     paths:
       - ".github/workflows/build-apk.yml"
-      - "Psyke-Android-14/**"
+      - "Psyke-Android-v16/**"
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: android-apk-v14-debug
+  group: android-apk-v16-debug
   cancel-in-progress: true
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: Psyke-Android-14
+        working-directory: Psyke-Android-v16
 
     steps:
       - uses: actions/checkout@v4
@@ -113,12 +113,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-v14-${{ github.run_number }}
-          path: Psyke-Android-14/buildozer.log
+          name: build-logs-v16-${{ github.run_number }}
+          path: Psyke-Android-v16/buildozer.log
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: apk-v14-${{ github.run_number }}
-          path: Psyke-Android-14/bin/*.apk
+          name: apk-v16-${{ github.run_number }}
+          path: Psyke-Android-v16/bin/*.apk
