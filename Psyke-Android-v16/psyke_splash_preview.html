@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Psyke Splash Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #10131a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: sans-serif;
+    color: #8a7e66;
+  }
+  #container {
+    position: relative;
+    width: 360px;
+    height: 640px;
+    background: #10131a;
+    border: 1px solid #2a3040;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  }
+  #lottie {
+    width: 100%;
+    height: 100%;
+  }
+  #controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  button {
+    background: #8a7030;
+    color: #f0e6cc;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    transition: background 0.15s;
+  }
+  button:hover {
+    background: #c8a44e;
+    color: #10131a;
+  }
+  #label {
+    font-size: 11px;
+    color: #353d50;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 10px;
+  }
+  #loader {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+  #loader.visible {
+    display: flex;
+  }
+  .spinner {
+    width: 100px;
+    height: 100px;
+    animation: rotation 0.75s linear infinite;
+    border-radius: 999px;
+  }
+  .path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 20;
+    stroke-linecap: round;
+  }
+  @keyframes rotation {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="lottie"></div>
+  <div id="loader" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 66 66" class="spinner">
+    <defs>
+      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fe0000" stop-opacity="1"></stop>
+        <stop offset="100%" stop-color="#af3dff" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    <circle
+      class="path"
+      cx="33"
+      cy="33"
+      r="20"
+      fill="transparent"
+      stroke="url(#gradient)"
+      stroke-width="1.5"></circle>
+  </svg>
+  </div>
+</div>
+<div id="controls">
+  <button onclick="replay()">REPLAY</button>
+</div>
+<div id="label">Psyke Splash &mdash; Lottie Preview (loads local splash data)</div>
+
+<script src="./lottie.min.js"></script>
+<script>
+const label = document.getElementById('label');
+const loader = document.getElementById('loader');
+let anim = null;
+
+window.onerror = function(msg, src, line) {
+  label.textContent = 'JS ERROR: ' + msg + ' (' + line + ')';
+};
+
+function showLoader() { loader.classList.add('visible'); }
+function hideLoader() { loader.classList.remove('visible'); }
+
+function playAnimation(animData) {
+  if (anim) { anim.destroy(); anim = null; }
+  hideLoader();
+  anim = lottie.loadAnimation({
+    container: document.getElementById('lottie'),
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    animationData: animData
+  });
+  anim.addEventListener('data_failed', function() { label.textContent = 'DATA FAILED'; });
+  anim.addEventListener('DOMLoaded', function() {
+    label.textContent = 'INTRO — frames 0-90...';
+    anim.playSegments([0, 90], true);
+    var spinnerStarted = false;
+    anim.addEventListener('complete', function() {
+      if (spinnerStarted) return;
+      spinnerStarted = true;
+      label.textContent = 'SPINNER LOOPING — FRAMES 90-135';
+      // Freeze lottie on last intro frame, show CSS spinner overlay
+      anim.goToAndStop(89, true);
+      showLoader();
+    });
+  });
+}
+
+function replay() {
+  label.textContent = 'Loading JSON...';
+  fetch('./psyke_splash.json?v=5')
+    .then(function(r) {
+      label.textContent = 'Parsing ' + r.headers.get('content-length') + ' bytes...';
+      return r.json();
+    })
+    .then(function(data) {
+      label.textContent = 'Loaded. Starting Lottie...';
+      playAnimation(data);
+    })
+    .catch(function(e) {
+      label.textContent = 'FETCH ERROR: ' + e.message;
+    });
+}
+
+replay();
+</script>
+</body>
+</html>
