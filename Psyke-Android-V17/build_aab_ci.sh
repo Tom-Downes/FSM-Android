@@ -17,6 +17,9 @@ test -n "${ANDROID_KEY_PASSWORD:-}"
 
 printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${KEYSTORE_PATH}"
 
+# Build recipes with 16 KB ELF page alignment for Android 15+/Play compliance.
+export LDFLAGS="${LDFLAGS:-} -Wl,-z,max-page-size=16384"
+
 export SPEC_PATH BUILD_INFO_PATH KEYSTORE_PATH
 python - <<'PY'
 from __future__ import annotations
@@ -82,6 +85,8 @@ rm -f "${OUT_FILE}"
 
 AAB_PATH="$(find "${SCRIPT_DIR}/bin" -maxdepth 1 -type f -name '*.aab' | head -n 1)"
 test -n "${AAB_PATH}"
+
+python verify_page_sizes.py "${AAB_PATH}"
 
 jarsigner \
   -keystore "${KEYSTORE_PATH}" \

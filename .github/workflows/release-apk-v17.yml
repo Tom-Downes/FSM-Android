@@ -37,7 +37,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - uses: actions/setup-java@v4
         with:
@@ -124,6 +124,8 @@ jobs:
           PY
 
       - name: Build APK
+        env:
+          LDFLAGS: -Wl,-z,max-page-size=16384
         run: |
           set -o pipefail
           buildozer -v android release 2>&1 | tee build.log
@@ -145,6 +147,7 @@ jobs:
             --key-pass "pass:$KEY_PASSWORD" \
             --out "$RELEASE_APK" \
             "$APK"
+          python verify_page_sizes.py "$RELEASE_APK"
           "$APKSIGNER" verify --verbose --print-certs "$RELEASE_APK"
           echo "RELEASE_APK=$RELEASE_APK" >> "$GITHUB_ENV"
 
