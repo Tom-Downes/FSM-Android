@@ -110,7 +110,7 @@ def patch_pyproject_recipes(p4a_dir: Path) -> None:
     replace_once(
         kivy,
         '    hostpython_prerequisites = ["cython>=0.29.1,<=3.0.12"]\n',
-        '    hostpython_prerequisites = ["cython>=0.29.1,<=3.0.12", "wheel"]\n',
+        '    hostpython_prerequisites = ["cython>=0.29.1,<=3.0.0", "wheel"]\n',
         "kivy hostpython prerequisites",
     )
 
