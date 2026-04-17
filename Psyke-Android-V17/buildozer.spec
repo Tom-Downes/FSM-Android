@@ -29,6 +29,8 @@ android.ndk_api = 26
 android.ndk = 29
 # Use the current p4a branch for modern Play/NDK compatibility fixes.
 p4a.branch = develop
+# CI can override this to a patched local python-for-android checkout.
+p4a.source_dir =
 android.archs = arm64-v8a,armeabi-v7a
 android.accept_sdk_license = True
 android.release_artifact = apk
