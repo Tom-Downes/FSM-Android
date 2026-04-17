@@ -101,12 +101,23 @@ jobs:
           set -o pipefail
           buildozer -v android release 2>&1 | tee build.log
 
-      - name: Rename APK
+      - name: Sign and rename APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           APK=$(find bin -name "*.apk" | head -1)
           test -n "$APK" || (echo "No APK found in bin/"; ls bin/ || true; exit 1)
           RELEASE_APK="Psyke-v16.8-${{ github.event.inputs.version || '16.8.0' }}.apk"
-          cp "$APK" "$RELEASE_APK"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name "apksigner" | sort -V | tail -1)
+          "$APKSIGNER" sign \
+            --ks psyke-upload.keystore \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --out "$RELEASE_APK" \
+            "$APK"
           echo "RELEASE_APK=$RELEASE_APK" >> "$GITHUB_ENV"
 
       - name: Publish release
