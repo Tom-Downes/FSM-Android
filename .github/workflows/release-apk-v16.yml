@@ -96,6 +96,12 @@ jobs:
           print(f"Stamped version={version} numeric={numeric}")
           PY
 
+      - name: Patch lottie loop
+        run: |
+          LOTTIE=$(python -c "import pythonforandroid, os; print(os.path.join(os.path.dirname(pythonforandroid.__file__), 'bootstraps/common/build/templates/lottie.xml'))")
+          sed -i 's/lottie_loop="true"/lottie_loop="false"/g' "$LOTTIE"
+          echo "Patched: $LOTTIE"
+
       - name: Build APK
         run: |
           set -o pipefail

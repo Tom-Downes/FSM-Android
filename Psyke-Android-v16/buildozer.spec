@@ -28,6 +28,7 @@ android.accept_sdk_license = True
 android.release_artifact = apk
 android.manifest.activity_attributes = android:windowSoftInputMode=adjustResize
 
+
 [buildozer]
 log_level = 2
 warn_on_root = 1
