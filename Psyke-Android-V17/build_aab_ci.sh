@@ -9,6 +9,7 @@ KEYSTORE_PATH="${SCRIPT_DIR}/psyke-upload.keystore"
 LOG_PATH="${SCRIPT_DIR}/buildozer-aab.log"
 OUT_DIR="${REPO_ROOT}/ABB"
 OUT_FILE="${OUT_DIR}/ABB-17.5.aab"
+P4A_SOURCE_DIR="${SCRIPT_DIR}/.ci/python-for-android"
 
 test -n "${ANDROID_KEYSTORE_BASE64:-}"
 test -n "${ANDROID_KEYSTORE_PASSWORD:-}"
@@ -19,8 +20,9 @@ printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${KEYSTORE_PATH}"
 
 # Build recipes with 16 KB ELF page alignment for Android 15+/Play compliance.
 export LDFLAGS="${LDFLAGS:-} -Wl,-z,max-page-size=16384"
+python "${SCRIPT_DIR}/prepare_p4a_ci.py" --source-dir "${P4A_SOURCE_DIR}"
 
-export SPEC_PATH BUILD_INFO_PATH KEYSTORE_PATH
+export SPEC_PATH BUILD_INFO_PATH KEYSTORE_PATH P4A_SOURCE_DIR
 python - <<'PY'
 from __future__ import annotations
 
@@ -54,6 +56,7 @@ def upsert(text: str, key: str, value: str) -> str:
 spec = upsert(spec, "version", version)
 spec = upsert(spec, "android.numeric_version", str(numeric))
 spec = upsert(spec, "android.release_artifact", "aab")
+spec = upsert(spec, "p4a.source_dir", os.environ["P4A_SOURCE_DIR"])
 spec = upsert(spec, "android.keystore", keystore_path.name)
 spec = upsert(spec, "android.keystore_passwd", os.environ["ANDROID_KEYSTORE_PASSWORD"])
 spec = upsert(spec, "android.keyalias", os.environ["ANDROID_KEY_ALIAS"])
