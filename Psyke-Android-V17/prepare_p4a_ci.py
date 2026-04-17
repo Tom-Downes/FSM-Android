@@ -88,7 +88,35 @@ def patch_lottie(p4a_dir: Path) -> None:
     print(f"[prepare_p4a] lottie.xml patched")
 
 
+def patch_recipe_py_ldflags(p4a_dir: Path) -> None:
+    """Inject -Wl,-z,max-page-size=16384 into all recipe envs (covers
+    autotools builds: Python3, OpenSSL, libffi, SQLite3, etc.)."""
+    recipe_py = p4a_dir / "pythonforandroid" / "recipe.py"
+    old = (
+        "    def get_recipe_env(self, arch=None, with_flags_in_cc=True):\n"
+        '        """Return the env specialized for the recipe\n'
+        '        """\n'
+        "        if arch is None:\n"
+        "            arch = self.filtered_archs[0]\n"
+        "        env = arch.get_env(with_flags_in_cc=with_flags_in_cc)\n"
+        "        return env\n"
+    )
+    new = (
+        "    def get_recipe_env(self, arch=None, with_flags_in_cc=True):\n"
+        '        """Return the env specialized for the recipe\n'
+        '        """\n'
+        "        if arch is None:\n"
+        "            arch = self.filtered_archs[0]\n"
+        "        env = arch.get_env(with_flags_in_cc=with_flags_in_cc)\n"
+        "        env['LDFLAGS'] = env.get('LDFLAGS', '') + ' -Wl,-z,max-page-size=16384'\n"
+        "        return env\n"
+    )
+    replace_once(recipe_py, old, new, "recipe.py LDFLAGS 16KB")
+
+
 def patch_sdl_page_size_support(p4a_dir: Path) -> None:
+    # Bootstrap Application.mk: covers libmain.so and BootstrapNDKRecipe libs
+    # (SDL2_image, SDL2_mixer, SDL2_ttf built via the bootstrap ndk-build).
     application_mk = (
         p4a_dir
         / "pythonforandroid"
@@ -101,9 +129,11 @@ def patch_sdl_page_size_support(p4a_dir: Path) -> None:
     append_once(
         application_mk,
         "APP_SUPPORT_FLEXIBLE_PAGE_SIZES := true",
-        "sdl flexible page size support",
+        "sdl bootstrap flexible page size",
     )
 
+    # SDL2 recipe builds libSDL2.so via its own ndk-build invocation.
+    # APP_LDFLAGS passes extra linker flags to ndk-build (valid ndk-build var).
     sdl2_recipe = p4a_dir / "pythonforandroid" / "recipes" / "sdl2" / "__init__.py"
     if sdl2_recipe.exists():
         replace_once(
@@ -112,7 +142,7 @@ def patch_sdl_page_size_support(p4a_dir: Path) -> None:
             "                _env=env\n",
             '                "NDK_DEBUG=" + ("1" if self.ctx.build_as_debuggable else "0"),\n'
             '                "APP_SUPPORT_FLEXIBLE_PAGE_SIZES=true",\n'
-            '                "APPLICATION_ADDITIONAL_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
+            '                "APP_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
             "                _env=env\n",
             "sdl2 ndk-build flags",
         )
@@ -127,7 +157,7 @@ def patch_sdl_page_size_support(p4a_dir: Path) -> None:
                     "                _env=env,\n",
                     '                "NDK_DEBUG=" + ("1" if self.ctx.build_as_debuggable else "0"),\n'
                     '                "APP_SUPPORT_FLEXIBLE_PAGE_SIZES=true",\n'
-                    '                "APPLICATION_ADDITIONAL_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
+                    '                "APP_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
                     "                _env=env,\n",
                 ),
                 (
@@ -135,7 +165,7 @@ def patch_sdl_page_size_support(p4a_dir: Path) -> None:
                     "                _env=env\n",
                     '                "NDK_DEBUG=" + ("1" if self.ctx.build_as_debuggable else "0"),\n'
                     '                "APP_SUPPORT_FLEXIBLE_PAGE_SIZES=true",\n'
-                    '                "APPLICATION_ADDITIONAL_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
+                    '                "APP_LDFLAGS=-Wl,-z,max-page-size=16384",\n'
                     "                _env=env\n",
                 ),
             ],
@@ -152,6 +182,7 @@ def main() -> int:
     p4a_dir = Path(args.source_dir).resolve()
     clone_p4a(p4a_dir, args.branch)
     patch_lottie(p4a_dir)
+    patch_recipe_py_ldflags(p4a_dir)
     patch_sdl_page_size_support(p4a_dir)
     print(f"[prepare_p4a] ready: {p4a_dir}")
     return 0
